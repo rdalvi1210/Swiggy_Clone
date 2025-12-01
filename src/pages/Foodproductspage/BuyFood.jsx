@@ -10,9 +10,23 @@ const MenuPage = () => {
 
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
-
-  // 🔥 Search State Added
   const [search, setSearch] = useState("");
+console.log(products)
+  // ⭐ ADD TO CART FUNCTION
+  const handleAddToCart = async (productId) => {
+    try {
+      const res = await api.post("/cart/add", {
+        storeId,
+        productId,
+      });
+
+      console.log("Added to cart:", res.data);
+      alert("Added to cart");
+    } catch (err) {
+      console.log(err);
+      alert("Failed to add item");
+    }
+  };
 
   const css = `
     * { padding: 0; margin: 0; box-sizing: border-box; font-family: "Gilroy"; }
@@ -38,7 +52,6 @@ const MenuPage = () => {
       border: 1px solid rgba(2, 6, 12, 0.15);
       background: white;
       box-shadow: rgba(0,0,0,0.04) 0px 8px 16px;
-
     }
 
     .ratingStar { font-size: 15px; margin-right: 5px; }
@@ -55,7 +68,7 @@ const MenuPage = () => {
     .circle { width: 7px; height: 7px; border-radius: 50%; background: #c4c4c4; }
     .line { width: 0.5px; height: 26px; background: #c4c4c4; }
 
-    .right { display: flex; align-items : start; flex-direction: column; gap: 5px; width: 50%;}
+    .right { display: flex; align-items : start; flex-direction: column; gap: 5px; width: 50%; }
     .firstP { font-weight: bold; text-align: left; }
     .firstP span { color: gray; }
     .timeP { font-weight: bold; text-align: left; }
@@ -64,7 +77,7 @@ const MenuPage = () => {
 
     .searchContainer { background-color: #e6e6e8; border-radius: 12px; margin-bottom: 20px; }
     .search {
-     padding: 6px 5px; margin: auto;
+      padding: 6px 5px; margin: auto;
       border-radius: 12px; background: #e6e6e8;
       display: flex; justify-content: space-around; align-items: center;
     }
@@ -135,17 +148,12 @@ const MenuPage = () => {
         width: 30%; display: flex;
         justify-content: end; align-items: center;
       }
-        .search{
-          width: 64%;
-        }
-        .search input{
-      width: 95%;
-        }
-
+      .search{ width:64%; }
+      .search input{ width:95%; }
     }
   `;
 
-  // Fetch menu data
+  // FETCH RESTAURANT + PRODUCTS
   useEffect(() => {
     if (!storeId) return;
 
@@ -161,7 +169,6 @@ const MenuPage = () => {
       });
   }, [storeId, category]);
 
-  // 🔥 FILTER PRODUCTS (search)
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -183,7 +190,6 @@ const MenuPage = () => {
           <p>
             <i className="fa-solid fa-star ratingStar"></i>
             <span>
-              {" "}
               {store ? store.rating : "4.2"} (4.8k+ ratings) ₹400 for two
             </span>
           </p>
@@ -225,7 +231,6 @@ const MenuPage = () => {
       <div id="screen-bf">
         <div className="searchContainer">
           <div className="search">
-            {/* 🔥 Search Input Updated */}
             <input
               type="text"
               placeholder="Search Dishes"
@@ -283,7 +288,14 @@ const MenuPage = () => {
                 <div className="rightSide">
                   <a className="imageContainer">
                     <img src={p.image} alt="" />
-                    <button className="addBtn">ADD</button>
+
+                    {/* 🔥 ADD TO CART BUTTON CONNECTED */}
+                    <button
+                      className="addBtn"
+                      onClick={() => handleAddToCart(p._id)}
+                    >
+                      ADD
+                    </button>
                   </a>
                 </div>
               </div>

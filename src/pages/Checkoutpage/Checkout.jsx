@@ -1,17 +1,95 @@
+import { useEffect, useState } from "react";
 import PagesNavbar from "../../components/PagesNavbar";
+import api from "../../utils/axiosInstance";
 import "./Checkout.css";
+
 export default function CheckoutPage() {
+  const [cart, setCart] = useState([]);
+  const [store, setStore] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  /* ============================================================
+      FETCH CART
+     ============================================================ */
+  const loadCart = async () => {
+    try {
+      const res = await api.get("/cart/getcart");
+      const items = res.data.cart || [];
+
+      if (!items.length) {
+        setCart([]);
+        setStore(null);
+        setLoading(false);
+        return;
+      }
+
+      setCart(items);
+
+      // Fetch store data using first item storeId
+      const storeId = items[0].storeId;
+      const storeRes = await api.get(`/food-store/${storeId}`);
+      setStore(storeRes.data.store);
+
+      setLoading(false);
+    } catch (err) {
+      console.log("CART LOAD ERROR", err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  /* ============================================================
+      UPDATE QUANTITY
+     ============================================================ */
+  const changeQty = async (productId, action) => {
+    try {
+      await api.post("/cart/update", { productId, action });
+      loadCart();
+    } catch (err) {
+      console.log("UPDATE FAILED", err);
+    }
+  };
+
+  /* ============================================================
+      REMOVE ITEM
+     ============================================================ */
+  const removeItem = async (productId) => {
+    try {
+      await api.post("/cart/remove", { productId });
+      loadCart();
+    } catch (err) {
+      console.log("REMOVE FAILED", err);
+    }
+  };
+
+  /* ============================================================
+      BILL CALCULATION
+     ============================================================ */
+  const itemTotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const deliveryFee = itemTotal > 300 ? 0 : 40;
+  const gst = Math.round(itemTotal * 0.05);
+  const toPay = itemTotal + deliveryFee + gst;
+
+  if (loading)
+    return <h2 style={{ padding: "40px", textAlign: "center" }}>Loading...</h2>;
+
   return (
     <>
       <PagesNavbar />
 
       <div className="desktopContainer-co">
+        {/* LEFT SIDE — ADDRESS SECTION */}
         <div className="desktopleftContainer-co">
           <div className="selectaddress-co">
             <h2>Select delivery address</h2>
-            <p style={{ marginTop: "5px" }}>
-              You have a saved address in this location
-            </p>
+            <p>You have a saved address in this location</p>
           </div>
 
           <div className="boxes-co">
@@ -23,11 +101,11 @@ export default function CheckoutPage() {
               <div className="info-co">
                 <div className="homeInfo-co">
                   <h5>Home</h5>
-                  <p>2 Ghosti duty d, Thane, Maharashtra, India</p>
+                  <p>Thane, Maharashtra, India</p>
                 </div>
 
                 <div className="btnHome-co">
-                  <h5 style={{ marginBottom: "10px" }}>46 MINS</h5>
+                  <h5>30 MINS</h5>
                   <button>DELIVER HERE</button>
                 </div>
               </div>
@@ -41,7 +119,7 @@ export default function CheckoutPage() {
               <div className="info-co">
                 <div className="homeInfo-co">
                   <h5>Add New Address</h5>
-                  <p>Thane, Maharashtra, India</p>
+                  <p>Thane, Maharashtra</p>
                 </div>
 
                 <div className="btnLocation-co">
@@ -52,45 +130,72 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE — CART SECTION */}
         <div className="mainContainer-co">
-          <div className="topBar-co">
-            <div className="icon-co">
-              <i className="fa-solid fa-arrow-left"></i>
-            </div>
+          {/* TOP BAR */}
+          {store && (
+            <div className="topBar-co">
+              <div className="icon-co">
+                <i className="fa-solid fa-arrow-left"></i>
+              </div>
 
-            <div className="imageTopBar-co">
-              <img
-                src="https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_100,h_100,c_fill/f58a1b772e5eeea45ff8ead3890703ed"
-                alt=""
-              />
-            </div>
+              <div className="imageTopBar-co">
+                <img src={store.coverImage} alt="" />
+              </div>
 
-            <div className="content-co">
-              <h4>Chelizza - India Ka Pizza</h4>
-              <p>5 items | ETA 40-45 MINS</p>
+              <div className="content-co">
+                <h4>{store.storeName}</h4>
+                <p>
+                  {cart.length} items | ETA {store.deliveryTime || "40 mins"}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* ITEM LIST */}
+          {/* CART ITEMS */}
           <div className="secondcard-co">
-            {[1, 2, 3, 4].map((_, i) => (
-              <div className="innercontent-co" key={i}>
+            {cart.map((item) => (
+              <div className="innercontent-co" key={item.productId}>
                 <div className="icon-co">
                   <div className="veg-icon-co"></div>
-                  <p>Peri Peri Paneer pops</p>
+                  <p>{item.name}</p>
                 </div>
 
                 <div className="btn-co">
                   <div className="quantity-box-co">
-                    <button className="qty-btn-co">−</button>
-                    <span className="qty-value-co">1</span>
-                    <button className="qty-btn-co">+</button>
+                    <button
+                      className="qty-btn-co"
+                      onClick={() => changeQty(item.productId, "dec")}
+                    >
+                      −
+                    </button>
+
+                    <span className="qty-value-co">{item.quantity}</span>
+
+                    <button
+                      className="qty-btn-co"
+                      onClick={() => changeQty(item.productId, "inc")}
+                    >
+                      +
+                    </button>
                   </div>
+
+                  <button
+                    onClick={() => removeItem(item.productId)}
+                    style={{
+                      color: "red",
+                      marginLeft: "12px",
+                      cursor: "pointer",
+                      background: "transparent",
+                      border: "none",
+                    }}
+                  >
+                    Remove
+                  </button>
                 </div>
 
                 <div className="price-co">
-                  <p>₹299</p>
+                  <p>₹{item.price * item.quantity}</p>
                 </div>
               </div>
             ))}
@@ -98,108 +203,38 @@ export default function CheckoutPage() {
             <div className="bighr-co" style={{ marginBottom: "20px" }}></div>
           </div>
 
-          {/* BILL */}
+          {/* BILL DETAILS */}
           <div className="billContainer-co">
-            <div className="firstLine-co">
-              <h4>Bill Details</h4>
-            </div>
+            <h4>Bill Details</h4>
 
-            <div className="secondline-co billflex-co">
+            <div className="billflex-co">
               <p>Item Total</p>
-              <p>₹793</p>
+              <p>₹{itemTotal}</p>
             </div>
 
-            <div className="thirdLine-co billflex-co">
-              <p>Delivery Fee | 5.0 kms</p>
-              <p>₹793</p>
+            <div className="billflex-co">
+              <p>Delivery Fee</p>
+              <p>₹{deliveryFee}</p>
             </div>
 
-            <div className="fourthLine-co billflex-co">
-              <p
-                style={{
-                  color: "rgba(2, 6, 12, 0.5)",
-                  fontWeight: "bold",
-                  fontSize: "13px",
-                }}
-              >
-                This fee fairly goes to our delivery partners for delivering
-                your food
-              </p>
-            </div>
-
-            <div className="hr-co"></div>
-
-            <div className="fifthLine-co billflex-co">
-              <p>Delivery Tip</p>
-              <p>Add Tip</p>
-            </div>
-
-            <div className="sixthline-co billflex-co">
+            <div className="billflex-co">
               <p>GST & Other Charges</p>
-              <p>₹793</p>
+              <p>₹{gst}</p>
             </div>
 
             <div className="hr-co"></div>
 
-            <div className="seventhLine-co billflex-co">
+            <div className="billflex-co">
               <p style={{ fontWeight: "bold" }}>To Pay</p>
-              <p style={{ fontWeight: "bold" }}>₹793</p>
+              <p style={{ fontWeight: "bold" }}>₹{toPay}</p>
             </div>
           </div>
 
-          <div
-            className="bighr-co"
-            style={{ marginTop: "30px", marginBottom: "30px" }}
-          ></div>
-
-          {/* POLICY */}
-          <div className="policy-co">
-            <div className="iconreview-co">
-              <i className="fa-solid fa-newspaper"></i>
-            </div>
-
-            <div className="policyInfo-co">
-              <h4>
-                Review your order and address details to avoid cancellations
-              </h4>
-
-              <p>
-                <span style={{ fontWeight: "bold" }}>Note:</span> Please ensure
-                your address and order details are correct. This order, if
-                cancelled, is non refundable.
-              </p>
-
-              <a href="">Read policy</a>
-            </div>
-          </div>
-
-          <div className="bighr-co" style={{ marginTop: "30px" }}></div>
-
-          {/* BOTTOM TAB */}
+          {/* BOTTOM PAYMENT BAR */}
           <div className="bottomTab-co">
-            <div className="firstlineTab-co">
-              <div className="line-co">
-                <div className="homeIcon-co">
-                  <i className="fa-solid fa-house"></i>
-                </div>
-
-                <div>
-                  <h5>Deliver to Home</h5>
-                  <p style={{ fontSize: "12px", marginBottom: "5px" }}>Kalwa</p>
-                  <p style={{ fontSize: "10px", fontWeight: "bold" }}>
-                    35 - 45 MINS
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <a href="">Change</a>
-              </div>
-            </div>
-
             <div className="secondLineTab-co">
               <div className="leftside-co">
-                <p>₹82</p>
+                <p>₹{toPay}</p>
                 <p>View Detailed bill</p>
               </div>
 
