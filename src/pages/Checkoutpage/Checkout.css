@@ -45,19 +45,19 @@
 .veg-icon-co {
   width: 14px;
   height: 14px;
-  border: 1px solid green;
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .veg-icon-co::after {
   content: "";
   width: 7px;
   height: 7px;
-  background-color: green;
+  background-color: var(--dot-color);
   border-radius: 50%;
-  display: block;
 }
 
 .quantity-box-co {
@@ -274,7 +274,7 @@
   }
 
   .mainContainer-co {
-    width: 30%;
+    width: 34%;
     background-color: #fff;
     padding: 12px;
   }
@@ -285,7 +285,7 @@
 
   .desktopleftContainer-co {
     display: block;
-    width: 67%;
+    width: 64%;
     padding: 40px;
     height: 400px;
     background-color: #fff;

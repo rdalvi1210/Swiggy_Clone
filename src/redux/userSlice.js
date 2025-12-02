@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   user: null,
-  initialized: false, // this is the REAL auth state
+  initialized: false,
 };
 
 const userSlice = createSlice({
@@ -13,12 +13,19 @@ const userSlice = createSlice({
       state.user = action.payload;
       state.initialized = true;
     },
+
     clearUser: (state) => {
       state.user = null;
       state.initialized = true;
     },
+
+    updateUserAddress: (state, action) => {
+      if (state.user) {
+        state.user.addresses = [action.payload]; // only ONE address
+      }
+    },
   },
 });
 
-export const { setUser, clearUser } = userSlice.actions;
+export const { setUser, clearUser, updateUserAddress } = userSlice.actions;
 export default userSlice.reducer;

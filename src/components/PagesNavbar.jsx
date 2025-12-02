@@ -27,6 +27,7 @@ export default function PagesNavbar() {
   const userMenuRef = useRef(null);
 
   const currentUser = useSelector((state) => state.user.user);
+  const cartItems = useSelector((state) => state.cart.items); // 🔥 GET CART FROM REDUX
 
   const handleLogout = async () => {
     try {
@@ -36,7 +37,6 @@ export default function PagesNavbar() {
 
       dispatch(clearUser());
       toast.success("Logged out successfully");
-
       navigate("/login");
     } catch (err) {
       toast.error("Logout failed");
@@ -49,6 +49,7 @@ export default function PagesNavbar() {
         setOpenUserMenu(false);
       }
     };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
@@ -132,7 +133,7 @@ export default function PagesNavbar() {
             <span className="font-medium text-gray-800">Help</span>
           </div>
 
-          {/* USER SECTION  */}
+          {/* USER SECTION */}
           <div className="relative" ref={userMenuRef}>
             {currentUser ? (
               <div
@@ -142,7 +143,6 @@ export default function PagesNavbar() {
                 <User size={20} className="text-gray-600" />
                 <span className="font-semibold">{currentUser.name}</span>
 
-                {/* 🔥 USER DROPDOWN ICON ADDED */}
                 <ChevronDown
                   size={18}
                   strokeWidth={2.5}
@@ -174,14 +174,19 @@ export default function PagesNavbar() {
             )}
           </div>
 
-          {/* CART */}
-          <div className="flex items-center gap-2 cursor-pointer hover:text-orange-500 relative">
+          {/* CART INDICATOR */}
+          <Link
+            to="/checkout"
+            className="flex items-center gap-2 cursor-pointer hover:text-orange-500 relative no-underline font-md"
+          >
             <ShoppingBag size={22} className="text-gray-600" />
-            <span className="font-medium">Cart</span>
+            <span className="font-bold">Cart</span>
+
+            {/* 🔥 CART COUNT FROM REDUX */}
             <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-[11px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-              0
+              {cartItems.length}
             </span>
-          </div>
+          </Link>
         </div>
       </div>
     </nav>

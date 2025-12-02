@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "./App.css";
 
 import CheckoutPage from "./pages/Checkoutpage/Checkout";
@@ -21,12 +21,45 @@ import ProtectedRoute from "./routes/ProtectedRoutes";
 
 import api from "./utils/axiosInstance";
 
+// import cart reducers
+import { clearCart, setCart, startLoading } from "./redux/cartSlice";
+
 function App() {
   const dispatch = useDispatch();
 
-  // ============================
-  // FETCH USER ON APP LOAD
-  // ============================
+  // ============================================================
+  // GLOBAL CART FETCH
+  // ============================================================
+  const loadCart = async () => {
+    try {
+      dispatch(startLoading());
+
+      const res = await api.get("/cart/getcart");
+      const items = res.data.cart || [];
+
+      if (!items.length) {
+        dispatch(clearCart());
+        return;
+      }
+
+      const storeId = items[0].storeId;
+      const storeRes = await api.get(`/food-store/${storeId}`);
+
+      dispatch(
+        setCart({
+          items,
+          store: storeRes.data.store,
+        })
+      );
+    } catch (err) {
+      console.log("CART LOAD ERROR", err);
+      dispatch(clearCart());
+    }
+  };
+
+  // ============================================================
+  // FETCH USER + CART ON APP LOAD
+  // ============================================================
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -38,11 +71,12 @@ function App() {
     };
 
     fetchUser();
-  }, [dispatch]);
+    loadCart(); // 🔥 fetch cart once
+  }, []);
 
   return (
     <Router>
-      {/* TOASTER GLOBAL */}
+      {/* ✔ RESTORED TOAST CUSTOM STYLING */}
       <Toaster
         position="top-center"
         toastOptions={{
@@ -67,7 +101,6 @@ function App() {
       />
 
       <Routes>
-        {/* PUBLIC ROUTES */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -76,9 +109,9 @@ function App() {
         <Route path="/buyfood" element={<FoodPage />} />
         <Route path="/bookRestaurant" element={<RestaurantBookPage />} />
         <Route path="/selectRestaurant" element={<RestaurantSelectPage />} />
+
         <Route path="/checkout" element={<CheckoutPage />} />
 
-        {/* SELLER DASHBOARD (Protected) */}
         <Route
           path="/seller-dashboard"
           element={

@@ -3,31 +3,48 @@ import { useSearchParams } from "react-router-dom";
 import PagesNavbar from "../../components/PagesNavbar";
 import api from "../../utils/axiosInstance";
 
+// redux
+import { useDispatch } from "react-redux";
+import { setCart } from "../../redux/cartSlice";
+
+// toast
+import toast from "react-hot-toast";
+
 const MenuPage = () => {
   const [params] = useSearchParams();
   const storeId = params.get("storeId");
   const category = params.get("category");
 
+  const dispatch = useDispatch();
+
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
-console.log(products)
-  // ⭐ ADD TO CART FUNCTION
+
+  // ⭐ ADD TO CART (Redux + Toast + Auto clear if diff restaurant)
   const handleAddToCart = async (productId) => {
     try {
       const res = await api.post("/cart/add", {
         storeId,
         productId,
       });
+      console.log(res);
+      // backend must return updated full cart + store
+      dispatch(
+        setCart({
+          items: res.data.cart,
+          store: res.data.store,
+        })
+      );
 
-      console.log("Added to cart:", res.data);
-      alert("Added to cart");
+      toast.success("Item added to cart");
     } catch (err) {
       console.log(err);
-      alert("Failed to add item");
+      toast.error("Failed to add item");
     }
   };
 
+  // CSS (unchanged)
   const css = `
     * { padding: 0; margin: 0; box-sizing: border-box; font-family: "Gilroy"; }
 
@@ -219,8 +236,7 @@ console.log(products)
                 Outlet <span>{store?.address || "Unknown"}</span>
               </p>
               <p className="timeP">
-                {store?.deliveryTime ? `${store.deliveryTime}` : "30-40"}
-                &nbsp;min
+                {store?.deliveryTime ? `${store.deliveryTime}` : "30-40"} min
               </p>
             </div>
           </div>
@@ -256,7 +272,12 @@ console.log(products)
                 <div className="leftside">
                   <span className="vegTag">
                     <svg viewBox="0 0 16 16">
-                      <circle cx="8" cy="8" r="8" fill="#007a48" />
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="8"
+                        fill={p.isVeg ? "#007a48" : "#b60202"} // green or red
+                      />
                       <circle cx="8" cy="8" r="3" fill="#fff" />
                     </svg>
                   </span>
@@ -289,7 +310,7 @@ console.log(products)
                   <a className="imageContainer">
                     <img src={p.image} alt="" />
 
-                    {/* 🔥 ADD TO CART BUTTON CONNECTED */}
+                    {/* ADD TO CART BUTTON */}
                     <button
                       className="addBtn"
                       onClick={() => handleAddToCart(p._id)}
