@@ -22,6 +22,8 @@ import ProtectedRoute from "./routes/ProtectedRoutes";
 import api from "./utils/axiosInstance";
 
 // import cart reducers
+import MyOrdersPage from "./pages/MyOrders";
+import PaymentPage from "./pages/Payment";
 import { clearCart, setCart, startLoading } from "./redux/cartSlice";
 
 function App() {
@@ -111,6 +113,8 @@ function App() {
         <Route path="/selectRestaurant" element={<RestaurantSelectPage />} />
 
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/myorders" element={<MyOrdersPage />} />
 
         <Route
           path="/seller-dashboard"

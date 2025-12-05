@@ -6,15 +6,23 @@ import "./Checkout.css";
 // REDUX
 import { Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { removeItemLocal, updateItemQty } from "../../redux/cartSlice";
 import { setUser } from "../../redux/userSlice";
 
+// TOAST
+import toast from "react-hot-toast";
+
 export default function CheckoutPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const cart = useSelector((state) => state.cart.items);
   const store = useSelector((state) => state.cart.store);
   const user = useSelector((state) => state.user.user);
+
+  // Address Selected for Checkout
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
   // MODAL STATES
   const [openModal, setOpenModal] = useState(false);
@@ -62,7 +70,7 @@ export default function CheckoutPage() {
   );
 
   const deliveryFee = itemTotal > 300 ? 0 : 40;
-  const gst = Math.round(itemTotal * 0.05);
+  const gst = Math.round(itemTotal * 0.01);
   const toPay = itemTotal + deliveryFee + gst;
 
   /* ============================================================
@@ -76,13 +84,15 @@ export default function CheckoutPage() {
         label: "Home",
       });
 
-      dispatch(setUser(res.data.user)); // full user stored in redux
+      dispatch(setUser(res.data.user));
+      toast.success("Address saved successfully");
 
       setOpenModal(false);
       setPincode("");
       setFullAddress("");
     } catch (err) {
       console.log("ADDRESS UPDATE FAILED", err);
+      toast.error("Failed to save address");
     }
   };
 
@@ -114,18 +124,38 @@ export default function CheckoutPage() {
 
                   <div className="btnHome-co">
                     <h5>{user.addresses[0].pincode}</h5>
-                    <button className="my-4">DELIVER HERE</button>
+
+                    {/* DELIVER HERE BUTTON WITH TOAST */}
+                    <button
+                      className="my-4"
+                      onClick={() => {
+                        if (!user?.addresses?.length) {
+                          toast.error("Please add an address first");
+                          return;
+                        }
+                        setSelectedAddress(user.addresses[0]);
+                        toast.success("Address selected");
+                      }}
+                      disabled={!user?.addresses?.length}
+                      style={{
+                        opacity: user?.addresses?.length ? 1 : 0.5,
+                        cursor: user?.addresses?.length
+                          ? "pointer"
+                          : "not-allowed",
+                      }}
+                    >
+                      DELIVER HERE
+                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ADD NEW ADDRESS BUTTON */}
+            {/* ADD / UPDATE ADDRESS BUTTON */}
             <div
               className="home-co"
               style={{ cursor: "pointer" }}
               onClick={() => {
-                // pre-fill when updating
                 if (user?.addresses?.length > 0) {
                   setPincode(user.addresses[0].pincode);
                   setFullAddress(user.addresses[0].fullAddress);
@@ -178,7 +208,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* CART LIST */}
+          {/* CART ITEMS */}
           <div className="secondcard-co">
             {cart.length === 0 ? (
               <div
@@ -212,13 +242,7 @@ export default function CheckoutPage() {
                   Your Cart is Empty
                 </h3>
 
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "#777",
-                    marginBottom: "15px",
-                  }}
-                >
+                <p style={{ fontSize: "14px", color: "#777" }}>
                   Looks like you haven't added anything yet.
                 </p>
 
@@ -241,7 +265,7 @@ export default function CheckoutPage() {
             ) : (
               cart.map((item) => (
                 <div className="innercontent-co" key={item.productId}>
-                  {/* LEFT: thumbnail + name */}
+                  {/* LEFT: IMAGE + NAME */}
                   <div
                     className="icon-co"
                     style={{
@@ -250,13 +274,11 @@ export default function CheckoutPage() {
                       gap: "12px",
                     }}
                   >
-                    {/* product image */}
                     <div
                       style={{
                         width: 50,
                         height: 50,
                         overflow: "hidden",
-                        flexShrink: 0,
                         background: "#f5f5f5",
                         display: "flex",
                         alignItems: "center",
@@ -268,7 +290,6 @@ export default function CheckoutPage() {
                           item.image ||
                           "https://via.placeholder.com/150?text=No+Image"
                         }
-                        alt={item.name}
                         style={{
                           width: "100%",
                           height: "100%",
@@ -278,13 +299,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <div>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                        }}
-                      >
-                        {/* veg icon (kept original small circle) */}
+                      <div style={{ display: "flex", gap: 8 }}>
                         <div
                           className="veg-icon-co"
                           style={{
@@ -297,7 +312,7 @@ export default function CheckoutPage() {
                           {item.name}
                         </p>
                       </div>
-                      {/* small subtitle or price (optional) */}
+
                       <div
                         className="font-bold"
                         style={{ marginTop: 6, color: "#777", fontSize: 13 }}
@@ -340,7 +355,6 @@ export default function CheckoutPage() {
                     </button>
                   </div>
 
-                  {/* PRICE */}
                   <div className="price-co font-bold">
                     <p>₹{item.price * item.quantity}</p>
                   </div>
@@ -351,7 +365,7 @@ export default function CheckoutPage() {
             <div className="bighr-co" style={{ marginBottom: "20px" }}></div>
           </div>
 
-          {/* BILL SECTION */}
+          {/* BILL DETAILS + DESKTOP PAYMENT BUTTON */}
           {cart.length > 0 && (
             <div className="billContainer-co">
               <h4>Bill Details</h4>
@@ -377,10 +391,37 @@ export default function CheckoutPage() {
                 <p style={{ fontWeight: "bold" }}>To Pay</p>
                 <p style={{ fontWeight: "bold" }}>₹{toPay}</p>
               </div>
+
+              {/* DESKTOP PAYMENT BUTTON RIGHT UNDER "TO PAY" */}
+              <div className="hidden md:block mt-5">
+                <button
+                  onClick={() => {
+                    if (!selectedAddress) {
+                      toast.error("Please select a delivery address");
+                      return;
+                    }
+                    navigate("/payment");
+                  }}
+                  disabled={!selectedAddress}
+                  style={{
+                    width: "100%",
+                    padding: "14px 20px",
+                    backgroundColor: selectedAddress ? "#fc8019" : "#d1d1d1",
+                    color: "white",
+                    borderRadius: "10px",
+                    border: "none",
+                    cursor: selectedAddress ? "pointer" : "not-allowed",
+                    fontWeight: "600",
+                    fontSize: "16px",
+                  }}
+                >
+                  Make Payment • ₹{toPay}
+                </button>
+              </div>
             </div>
           )}
 
-          {/* PAYMENT BAR */}
+          {/* MOBILE PAYMENT BAR */}
           {cart.length > 0 && (
             <div className="bottomTab-co">
               <div className="secondLineTab-co">
@@ -389,7 +430,20 @@ export default function CheckoutPage() {
                   <p>View Detailed bill</p>
                 </div>
 
-                <div className="rightside-co">
+                <div
+                  className="rightside-co"
+                  style={{
+                    opacity: selectedAddress ? 1 : 0.5,
+                    pointerEvents: selectedAddress ? "auto" : "none",
+                  }}
+                  onClick={() => {
+                    if (!selectedAddress) {
+                      toast.error("Please select a delivery address");
+                      return;
+                    }
+                    navigate("/payment");
+                  }}
+                >
                   <p>Make Payment</p>
                 </div>
               </div>
@@ -398,7 +452,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* ===================== TAILWIND MODAL ===================== */}
+      {/* ===================== ADDRESS MODAL ===================== */}
       {openModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]">
           <div className="bg-white w-[90%] md:w-[400px] p-6 rounded-xl shadow-lg">

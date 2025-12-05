@@ -5,7 +5,7 @@ import api from "../../utils/axiosInstance";
 
 // redux
 import { useDispatch } from "react-redux";
-import { setCart } from "../../redux/cartSlice";
+import { clearCart, setCart, startLoading } from "../../redux/cartSlice";
 
 // toast
 import toast from "react-hot-toast";
@@ -28,7 +28,7 @@ const MenuPage = () => {
         storeId,
         productId,
       });
-      console.log(res);
+      console.log(res, "res--");
       // backend must return updated full cart + store
       dispatch(
         setCart({
@@ -36,11 +36,38 @@ const MenuPage = () => {
           store: res.data.store,
         })
       );
-
+      loadCart();
       toast.success("Item added to cart");
     } catch (err) {
       console.log(err);
       toast.error("Failed to add item");
+    }
+  };
+
+  const loadCart = async () => {
+    try {
+      dispatch(startLoading());
+
+      const res = await api.get("/cart/getcart");
+      const items = res.data.cart || [];
+
+      if (!items.length) {
+        dispatch(clearCart());
+        return;
+      }
+
+      const storeId = items[0].storeId;
+      const storeRes = await api.get(`/food-store/${storeId}`);
+
+      dispatch(
+        setCart({
+          items,
+          store: storeRes.data.store,
+        })
+      );
+    } catch (err) {
+      console.log("CART LOAD ERROR", err);
+      dispatch(clearCart());
     }
   };
 

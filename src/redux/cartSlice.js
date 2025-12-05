@@ -27,7 +27,6 @@ const cartSlice = createSlice({
       state.initialized = true;
     },
 
-    // ⭐ INSTANT UPDATE — NO REFRESH NEEDED
     updateItemQty: (state, action) => {
       const { productId, actionType } = action.payload;
       const item = state.items.find((i) => i.productId === productId);
