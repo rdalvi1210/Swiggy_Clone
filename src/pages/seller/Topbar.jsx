@@ -1,9 +1,9 @@
-import axios from "axios";
 import { Menu } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { clearUser } from "../../redux/userSlice";
+import api from "../../utils/axiosInstance";
 
 export default function Navbar({ setSidebarOpen }) {
   const account = useSelector((s) => s.user.user);
@@ -12,7 +12,7 @@ export default function Navbar({ setSidebarOpen }) {
 
   const logout = async () => {
     try {
-      await axios.get("http://localhost:3000/api/v1/auth/logout", {
+      await api.get("/auth/logout", {
         withCredentials: true,
       });
 
@@ -34,7 +34,6 @@ export default function Navbar({ setSidebarOpen }) {
           className="w-6 h-6 cursor-pointer lg:hidden"
           onClick={() => setSidebarOpen(true)}
         />
-
         {/* Welcome Text */}
         <h1 className="text-lg font-semibold text-gray-700 truncate max-w-[200px]">
           Welcome,{" "}
@@ -42,7 +41,8 @@ export default function Navbar({ setSidebarOpen }) {
             {account?.name || "User"}
           </span>
         </h1>
-            {account?.role === "seller" ? "Seller_id" : "Admin_id"} : {account?._id || "id"}
+        {account?.role === "seller" ? "Seller_id" : "Admin_id"} :{" "}
+        {account?._id || "id"}
       </div>
 
       {/* RIGHT */}

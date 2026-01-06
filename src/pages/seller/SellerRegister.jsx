@@ -3,6 +3,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import "./SellerRegister.css";
+import api from "../../utils/axiosInstance";
 
 export default function SellerRegister() {
   const navigate = useNavigate();
@@ -30,8 +31,8 @@ export default function SellerRegister() {
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:3000/api/v1/auth/seller-register",
+      const res = await api.post(
+        "/auth/seller-register",
         formData,
         { withCredentials: true }
       );
