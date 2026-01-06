@@ -23,6 +23,7 @@ import api from "./utils/axiosInstance";
 
 // import cart reducers
 import MyOrdersPage from "./pages/MyOrders";
+import OrderSuccess from "./pages/Ordersuccess";
 import PaymentPage from "./pages/Payment";
 import { clearCart, setCart, startLoading } from "./redux/cartSlice";
 
@@ -115,11 +116,12 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/myorders" element={<MyOrdersPage />} />
+        <Route path="/order-success/:id" element={<OrderSuccess />} />
 
         <Route
           path="/seller-dashboard"
           element={
-            <ProtectedRoute allowedRoles={["seller"]}>
+            <ProtectedRoute allowedRoles={["seller", "admin"]}>
               <SellerDashboard />
             </ProtectedRoute>
           }

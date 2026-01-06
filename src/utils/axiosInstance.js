@@ -5,7 +5,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// OPTIONAL: auto-handle 401 (expired token)
+// OPTIONAL: auto-handle 401 (expired token)z
 // If user token expires → auto logout
 api.interceptors.response.use(
   (response) => response,

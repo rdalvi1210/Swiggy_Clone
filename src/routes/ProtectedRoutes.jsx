@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   // Role restriction
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === "seller")
+    if (user.role === "seller" || user.role === "admin")
       return <Navigate to="/seller-dashboard" replace />;
     if (user.role === "user") return <Navigate to="/" replace />;
     return <Navigate to="/" replace />;

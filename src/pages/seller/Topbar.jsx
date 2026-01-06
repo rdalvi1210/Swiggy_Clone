@@ -39,10 +39,10 @@ export default function Navbar({ setSidebarOpen }) {
         <h1 className="text-lg font-semibold text-gray-700 truncate max-w-[200px]">
           Welcome,{" "}
           <span className="text-orange-600 font-bold">
-            {account?.ownerName || "User"}
+            {account?.name || "User"}
           </span>
         </h1>
-            Seller_id : {account?._id || "id"}
+            {account?.role === "seller" ? "Seller_id" : "Admin_id"} : {account?._id || "id"}
       </div>
 
       {/* RIGHT */}

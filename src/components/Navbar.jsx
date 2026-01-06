@@ -3,6 +3,13 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 // Redux
+import {
+  ChevronDown,
+  ChevronUp,
+  LogOut,
+  Package,
+  ShoppingCart,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/userSlice";
 import api from "../utils/axiosInstance";
@@ -71,26 +78,43 @@ function Navbar() {
             {/* USER SECTION */}
             <li style={{ position: "relative" }} ref={menuRef}>
               {currentUser ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => setOpenMenu(!openMenu)}
-                >
-                  <svg
-                    width="22"
-                    height="22"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
+                <>
+                  {/* PROFILE BUTTON */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => setOpenMenu((prev) => !prev)}
                   >
-                    <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
-                  </svg>
+                    <svg
+                      width="22"
+                      height="22"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+                    </svg>
 
-                  <span style={{ fontWeight: 600 }}>{currentUser.name}</span>
+                    <span style={{ fontWeight: 600 }}>{currentUser.name}</span>
 
+                    {/* TOGGLE ARROW */}
+                    {openMenu ? (
+                      <ChevronUp
+                        onClick={() => setOpenMenu((prev) => !prev)}
+                        size={18}
+                      />
+                    ) : (
+                      <ChevronDown
+                        onClick={() => setOpenMenu((prev) => !prev)}
+                        size={18}
+                      />
+                    )}
+                  </div>
+
+                  {/* DROPDOWN */}
                   {openMenu && (
                     <div
                       style={{
@@ -98,30 +122,93 @@ function Navbar() {
                         top: "35px",
                         right: 0,
                         background: "white",
-                        border: "1px solid #ddd",
-                        borderRadius: "5px",
-                        padding: "10px 15px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        cursor: "pointer",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        padding: "8px 0",
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                         zIndex: 999,
-                        minWidth: "100px",
+                        minWidth: "170px",
                         fontSize: "14px",
-                        color: "black",
+                        color: "#111827",
                       }}
                     >
-                      <span
-                        onClick={handleLogout}
-                        style={{
-                          display: "block",
-                          padding: "5px 0",
-                          cursor: "pointer",
+                      {/* My Orders */}
+                      <div
+                        onClick={() => {
+                          navigate("/myorders");
+                          setOpenMenu(false);
                         }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 14px",
+                          cursor: "pointer",
+                          borderRadius: "6px",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "#f3f4f6")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
                       >
-                        Logout
-                      </span>
+                        <Package size={16} /> My Orders
+                      </div>
+
+                      {/* My Cart */}
+                      <div
+                        onClick={() => {
+                          navigate("/checkout");
+                          setOpenMenu(false);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 14px",
+                          cursor: "pointer",
+                          borderRadius: "6px",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "#f3f4f6")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
+                      >
+                        <ShoppingCart size={16} /> My Cart
+                      </div>
+
+                      <hr style={{ margin: "6px 0", borderColor: "#e5e7eb" }} />
+
+                      {/* Logout */}
+                      <div
+                        onClick={() => {
+                          handleLogout();
+                          setOpenMenu(false);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 14px",
+                          cursor: "pointer",
+                          borderRadius: "6px",
+                          color: "#dc2626",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "#fee2e2")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
+                      >
+                        <LogOut size={16} /> Logout
+                      </div>
                     </div>
                   )}
-                </div>
+                </>
               ) : (
                 <a href="/login">Sign in</a>
               )}

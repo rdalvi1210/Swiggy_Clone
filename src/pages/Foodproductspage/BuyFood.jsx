@@ -4,7 +4,7 @@ import PagesNavbar from "../../components/PagesNavbar";
 import api from "../../utils/axiosInstance";
 
 // redux
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { clearCart, setCart, startLoading } from "../../redux/cartSlice";
 
 // toast
@@ -20,9 +20,14 @@ const MenuPage = () => {
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
+  const user = useSelector((state) => state.user?.user);
 
-  // ⭐ ADD TO CART (Redux + Toast + Auto clear if diff restaurant)
+  // ⭐ ADD TO CART (Redux + Toast + A  uto clear if diff restaurant)
   const handleAddToCart = async (productId) => {
+    if (!user) {
+      toast.error("Please login first");
+      return;
+    }
     try {
       const res = await api.post("/cart/add", {
         storeId,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { setUser } from "../../redux/userSlice";
 import api from "../../utils/axiosInstance";
 import "./Login.css";
@@ -31,26 +31,26 @@ function Login() {
     }
 
     try {
-      // LOGIN API
-      const res = await api.post("/auth/login", form, {
+      // 1️⃣ LOGIN (sets cookie)
+      await api.post("/auth/login", form, {
         withCredentials: true,
       });
 
-      toast.success(res.data.message || "Login successful");
-
-      const accountType = res.data.accountType;
-
-      // FETCH CURRENT USER
+      // 2️⃣ FETCH CURRENT USER (cookie-based)
       const me = await api.get("/auth/me", {
         withCredentials: true,
       });
 
-      dispatch(setUser(me.data.account));
+      const user = me.data.account;
 
-      // REDIRECT BASED ON ROLE
-      if (accountType === "user") {
+      // 3️⃣ SAVE USER TO REDUX
+      dispatch(setUser(user));
+      toast.success("Login successful");
+
+      // 4️⃣ REDIRECT BASED ON ROLE (SINGLE SOURCE)
+      if (user.role === "user") {
         navigate("/");
-      } else if (accountType === "seller") {
+      } else if (user.role === "seller" || user.role === "admin") {
         navigate("/seller-dashboard");
       } else {
         navigate("/");
@@ -74,12 +74,12 @@ function Login() {
             <img
               className="mobileImage"
               src="/images/create_account_graphics_2x_brdvrk.png"
-              alt=""
+              alt="Create account"
             />
             <img
               className="desktopImage"
               src="/images/Image-login_btpq7r.png"
-              alt=""
+              alt="Login"
             />
           </div>
 

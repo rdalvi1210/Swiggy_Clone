@@ -175,18 +175,20 @@ export default function PagesNavbar() {
           </div>
 
           {/* CART INDICATOR */}
-          <Link
-            to="/checkout"
-            className="flex items-center gap-2 cursor-pointer hover:text-orange-500 relative no-underline font-md"
-          >
-            <ShoppingBag size={22} className="text-gray-600" />
-            <span className="font-bold">Cart</span>
+          {currentUser && (
+            <Link
+              to="/checkout"
+              className="flex items-center gap-2 cursor-pointer hover:text-orange-500 relative no-underline font-md"
+            >
+              <ShoppingBag size={22} className="text-gray-600" />
+              <span className="font-bold">Cart</span>
 
-            {/* 🔥 CART COUNT FROM REDUX */}
-            <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-[11px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-              {cartItems.length}
-            </span>
-          </Link>
+              {/* 🔥 CART COUNT FROM REDUX */}
+              <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-[11px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                {cartItems.length}
+              </span>
+            </Link>
+          )}
         </div>
       </div>
     </nav>
