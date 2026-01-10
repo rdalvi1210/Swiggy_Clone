@@ -12,12 +12,14 @@ import SettingsPage from "./StoreInformationEdit";
 import Navbar from "./Topbar";
 
 export default function SellerDashboard() {
-  const [activePage, setActivePage] = useState("orders");
+  const user = useSelector((state) => state.user?.user);
+  const isAdmin = user?.role === "admin";
+  const [activePage, setActivePage] = useState(
+    !isAdmin ? "orders" : "show-products"
+  );
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // 🔐 Get logged-in user
-  const user = useSelector((state) => state.user?.user);
-  const isAdmin = user?.role === "admin";
 
   const renderPage = () => {
     switch (activePage) {
@@ -46,7 +48,7 @@ export default function SellerDashboard() {
         return <AdminShowAllSellers />;
 
       default:
-        return isAdmin ? <AdminShowProducts /> : <OrdersPage />;
+        return isAdmin ? <AdminShowProducts /> : <ProductsPage />;
     }
   };
 
