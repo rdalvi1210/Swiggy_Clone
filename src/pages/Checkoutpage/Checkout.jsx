@@ -4,7 +4,7 @@ import api from "../../utils/axiosInstance";
 import "./Checkout.css";
 
 // REDUX
-import { Trash2 } from "lucide-react";
+import { Trash2, MapPin, Edit3, Plus } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { removeItemLocal, updateItemQty } from "../../redux/cartSlice";
@@ -77,6 +77,7 @@ export default function CheckoutPage() {
       ADD / UPDATE SINGLE ADDRESS
   ============================================================ */
   const handleAddAddress = async () => {
+    if (!pincode || !fullAddress) return toast.error("Please fill all fields");
     try {
       const res = await api.post("/auth/add-address", {
         pincode,
@@ -96,22 +97,36 @@ export default function CheckoutPage() {
     }
   };
 
+  const openEditModal = () => {
+    if (user?.addresses?.length > 0) {
+      setPincode(user.addresses[0].pincode);
+      setFullAddress(user.addresses[0].fullAddress);
+    }
+    setOpenModal(true);
+  };
+
   return (
     <>
       <PagesNavbar />
 
       <div className="desktopContainer-co">
-        {/* ================= LEFT SIDE — ADDRESS ================= */}
-        <div className="desktopleftContainer-co">
+        {/* ================= LEFT SIDE — ADDRESS (HIDDEN ON MOBILE, USES NEW MOBILE SECTION BELOW) ================= */}
+        <div className="desktopleftContainer-co hidden md:block">
           <div className="selectaddress-co">
             <h2>Select delivery address</h2>
             <p>You have a saved address in this location</p>
           </div>
 
           <div className="boxes-co">
-            {/* SHOW SAVED ADDRESS IF EXISTS */}
             {user?.addresses?.length > 0 && (
-              <div className="home-co">
+              <div
+                className="home-co"
+                style={{
+                  border: selectedAddress
+                    ? "2px solid #fc8019"
+                    : "1px solid #ddd",
+                }}
+              >
                 <div className="iconchimney-co">
                   <i className="fa-solid fa-house-chimney"></i>
                 </div>
@@ -124,49 +139,28 @@ export default function CheckoutPage() {
 
                   <div className="btnHome-co">
                     <h5>{user.addresses[0].pincode}</h5>
-
-                    {/* DELIVER HERE BUTTON WITH TOAST */}
                     <button
                       className="my-4"
                       onClick={() => {
-                        if (!user?.addresses?.length) {
-                          toast.error("Please add an address first");
-                          return;
-                        }
                         setSelectedAddress(user.addresses[0]);
                         toast.success("Address selected");
                       }}
-                      disabled={!user?.addresses?.length}
-                      style={{
-                        opacity: user?.addresses?.length ? 1 : 0.5,
-                        cursor: user?.addresses?.length
-                          ? "pointer"
-                          : "not-allowed",
-                      }}
                     >
-                      DELIVER HERE
+                      {selectedAddress ? "SELECTED" : "DELIVER HERE"}
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ADD / UPDATE ADDRESS BUTTON */}
             <div
               className="home-co"
               style={{ cursor: "pointer" }}
-              onClick={() => {
-                if (user?.addresses?.length > 0) {
-                  setPincode(user.addresses[0].pincode);
-                  setFullAddress(user.addresses[0].fullAddress);
-                }
-                setOpenModal(true);
-              }}
+              onClick={openEditModal}
             >
               <div className="iconchimney-co">
                 <i className="fa-solid fa-location-dot"></i>
               </div>
-
               <div className="info-co">
                 <div className="homeInfo-co">
                   <h5>
@@ -174,9 +168,8 @@ export default function CheckoutPage() {
                       ? "Update Address"
                       : "Add New Address"}
                   </h5>
-                  <p>Tap to add</p>
+                  <p>Tap to manage</p>
                 </div>
-
                 <div className="btnLocation-co">
                   <button>
                     {user?.addresses?.length > 0 ? "UPDATE" : "ADD NEW"}
@@ -187,18 +180,82 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* ================= RIGHT SIDE — CART ================= */}
-        <div className="mainContainer-co">
+        {/* ================= RIGHT SIDE — CART & MOBILE ADDRESS ================= */}
+        <div className="mainContainer-co w-full md:w-auto">
+          {/* MOBILE ONLY ADDRESS SECTION */}
+          <div className="block md:hidden bg-white p-4 mb-4 shadow-sm border-b">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold text-lg">Delivery Address</h3>
+              <button
+                onClick={openEditModal}
+                className="text-orange-500 text-sm font-semibold flex items-center gap-1"
+              >
+                {user?.addresses?.length > 0 ? (
+                  <>
+                    <Edit3 size={14} /> Edit
+                  </>
+                ) : (
+                  <>
+                    <Plus size={14} /> Add
+                  </>
+                )}
+              </button>
+            </div>
+
+            {user?.addresses?.length > 0 ? (
+              <div
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  selectedAddress
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-100"
+                }`}
+                onClick={() => {
+                  setSelectedAddress(user.addresses[0]);
+                  toast.success("Delivery address set");
+                }}
+              >
+                <div className="flex gap-3">
+                  <MapPin
+                    className={
+                      selectedAddress ? "text-orange-500" : "text-gray-400"
+                    }
+                    size={20}
+                  />
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {user.addresses[0].label} ({user.addresses[0].pincode})
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      {user.addresses[0].fullAddress}
+                    </p>
+                    {!selectedAddress && (
+                      <p className="text-orange-500 text-[10px] mt-2 font-bold uppercase tracking-tight">
+                        Tap to select this address
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="text-center py-4 border-2 border-dashed border-gray-200 rounded-lg"
+                onClick={openEditModal}
+              >
+                <p className="text-gray-500 text-sm">
+                  No address saved. Tap to add.
+                </p>
+              </div>
+            )}
+          </div>
+
           {store && cart.length > 0 && (
             <div className="topBar-co">
-              <div className="icon-co">
+              <div className="icon-co" onClick={() => navigate(-1)}>
                 <i className="fa-solid fa-arrow-left"></i>
               </div>
-
               <div className="imageTopBar-co">
                 <img src={store.coverImage} alt="" />
               </div>
-
               <div className="content-co">
                 <h4>{store.storeName}</h4>
                 <p>
@@ -211,119 +268,52 @@ export default function CheckoutPage() {
           {/* CART ITEMS */}
           <div className="secondcard-co">
             {cart.length === 0 ? (
-              <div
-                style={{
-                  padding: "60px 20px",
-                  textAlign: "center",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "10px",
-                  color: "#555",
-                }}
-              >
+              <div className="flex flex-col items-center py-10 gap-3">
                 <img
                   src="https://cdn-icons-png.flaticon.com/512/2037/2037450.png"
-                  alt="Empty Cart"
-                  style={{
-                    width: "80px",
-                    opacity: 0.8,
-                    marginBottom: "10px",
-                  }}
+                  alt="Empty"
+                  className="w-20 opacity-50"
                 />
-
-                <h3
-                  style={{
-                    fontWeight: "600",
-                    color: "#333",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Your Cart is Empty
-                </h3>
-
-                <p style={{ fontSize: "14px", color: "#777" }}>
-                  Looks like you haven't added anything yet.
-                </p>
-
+                <h3 className="font-bold">Your Cart is Empty</h3>
                 <button
-                  style={{
-                    backgroundColor: "#fc8019",
-                    padding: "10px 20px",
-                    color: "white",
-                    borderRadius: "8px",
-                    border: "none",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                  }}
-                  onClick={() => window.history.back()}
+                  className="bg-orange-500 text-white px-5 py-2 rounded-lg"
+                  onClick={() => navigate("/")}
                 >
-                  Browse Restaurants
+                  Browse Menu
                 </button>
               </div>
             ) : (
               cart.map((item) => (
                 <div className="innercontent-co" key={item.productId}>
-                  {/* LEFT: IMAGE + NAME */}
-                  <div
-                    className="icon-co"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 50,
-                        height: 50,
-                        overflow: "hidden",
-                        background: "#f5f5f5",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
+                  <div className="icon-co flex items-center gap-3">
+                    <div className="w-12 h-12 rounded overflow-hidden bg-gray-100">
                       <img
-                        src={
-                          item.image ||
-                          "https://via.placeholder.com/150?text=No+Image"
-                        }
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
+                        src={item.image || "https://via.placeholder.com/150"}
+                        className="w-full h-full object-cover"
                       />
                     </div>
-
                     <div>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div className="flex items-center gap-2">
                         <div
-                          className="veg-icon-co"
-                          style={{
-                            "--border-color": item.isVeg ? "green" : "red",
-                            "--dot-color": item.isVeg ? "green" : "red",
-                          }}
-                        />
-
-                        <p className="text-sm md:text-md" style={{ margin: 0 }}>
-                          {item.name}
-                        </p>
+                          className={`w-3 h-3 border flex items-center justify-center ${
+                            item.isVeg ? "border-green-600" : "border-red-600"
+                          }`}
+                        >
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              item.isVeg ? "bg-green-600" : "bg-red-600"
+                            }`}
+                          ></div>
+                        </div>
+                        <p className="text-sm font-medium">{item.name}</p>
                       </div>
-
-                      <div
-                        className="font-bold"
-                        style={{ marginTop: 6, color: "#777", fontSize: 13 }}
-                      >
+                      <div className="text-xs text-gray-400 mt-1">
                         ₹{item.price} each
                       </div>
                     </div>
                   </div>
 
-                  {/* QTY + REMOVE */}
-                  <div className="btn-co flex" style={{ alignItems: "center" }}>
+                  <div className="btn-co flex items-center">
                     <div className="quantity-box-co">
                       <button
                         className="qty-btn-co"
@@ -331,9 +321,7 @@ export default function CheckoutPage() {
                       >
                         −
                       </button>
-
                       <span className="qty-value-co">{item.quantity}</span>
-
                       <button
                         className="qty-btn-co"
                         onClick={() => changeQty(item.productId, "inc")}
@@ -341,79 +329,56 @@ export default function CheckoutPage() {
                         +
                       </button>
                     </div>
-
                     <button
+                      className="ml-3"
                       onClick={() => removeItem(item.productId)}
-                      style={{
-                        marginLeft: "12px",
-                        cursor: "pointer",
-                        background: "transparent",
-                        border: "none",
-                      }}
                     >
-                      <Trash2 size={20} color="red" />
+                      <Trash2 size={18} color="red" />
                     </button>
                   </div>
 
                   <div className="price-co font-bold">
-                    <p>₹{item.price * item.quantity}</p>
+                    ₹{item.price * item.quantity}
                   </div>
                 </div>
               ))
             )}
-
-            <div className="bighr-co" style={{ marginBottom: "20px" }}></div>
+            <div className="bighr-co mb-5"></div>
           </div>
 
-          {/* BILL DETAILS + DESKTOP PAYMENT BUTTON */}
+          {/* BILL DETAILS */}
           {cart.length > 0 && (
-            <div className="billContainer-co">
+            <div className="billContainer-co mb-20 md:mb-5">
               <h4>Bill Details</h4>
-
               <div className="billflex-co">
                 <p>Item Total</p>
                 <p>₹{itemTotal}</p>
               </div>
-
               <div className="billflex-co">
                 <p>Delivery Fee</p>
                 <p>₹{deliveryFee}</p>
               </div>
-
               <div className="billflex-co">
                 <p>GST</p>
                 <p>₹{gst}</p>
               </div>
-
               <div className="hr-co"></div>
-
-              <div className="billflex-co">
-                <p style={{ fontWeight: "bold" }}>To Pay</p>
-                <p style={{ fontWeight: "bold" }}>₹{toPay}</p>
+              <div className="billflex-co font-bold">
+                <p>To Pay</p>
+                <p>₹{toPay}</p>
               </div>
 
-              {/* DESKTOP PAYMENT BUTTON RIGHT UNDER "TO PAY" */}
+              {/* DESKTOP PAYMENT BUTTON */}
               <div className="hidden md:block mt-5">
                 <button
-                  onClick={() => {
-                    if (!selectedAddress) {
-                      toast.error("Please select a delivery address");
-                      return;
-                    }
-                    navigate("/payment");
-                  }}
-                  disabled={!selectedAddress}
-                  style={{
-                    width: "100%",
-                    padding: "14px 20px",
-                    backgroundColor: selectedAddress ? "#fc8019" : "#d1d1d1",
-                    color: "white",
-                    borderRadius: "10px",
-                    border: "none",
-                    cursor: selectedAddress ? "pointer" : "not-allowed",
-                    fontWeight: "600",
-                    fontSize: "16px",
-                  }}
+                  onClick={() =>
+                    !selectedAddress
+                      ? toast.error("Select address")
+                      : navigate("/payment")
+                  }
+                  className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
+                    selectedAddress ? "bg-orange-500" : "bg-gray-300"
+                  }`}
                 >
                   Make Payment • ₹{toPay}
                 </button>
@@ -426,19 +391,19 @@ export default function CheckoutPage() {
             <div className="bottomTab-co">
               <div className="secondLineTab-co">
                 <div className="leftside-co">
-                  <p>₹{toPay}</p>
-                  <p>View Detailed bill</p>
+                  <p className="font-bold text-lg">₹{toPay}</p>
+                  <p className="text-[10px] uppercase text-orange-500 font-bold">
+                    View detailed bill
+                  </p>
                 </div>
 
                 <div
                   className="rightside-co"
-                  style={{
-                    opacity: selectedAddress ? 1 : 0.5,
-                    pointerEvents: selectedAddress ? "auto" : "none",
-                  }}
+                  style={{ opacity: selectedAddress ? 1 : 0.6 }}
                   onClick={() => {
                     if (!selectedAddress) {
-                      toast.error("Please select a delivery address");
+                      toast.error("Please select a delivery address above");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                       return;
                     }
                     navigate("/payment");
@@ -454,41 +419,53 @@ export default function CheckoutPage() {
 
       {/* ===================== ADDRESS MODAL ===================== */}
       {openModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]">
-          <div className="bg-white w-[90%] md:w-[400px] p-6 rounded-xl shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1001] px-4">
+          <div className="bg-white w-full max-w-[400px] p-6 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <MapPin size={20} className="text-orange-500" />
               {user?.addresses?.length > 0 ? "Update Address" : "Add Address"}
             </h2>
 
-            <input
-              type="text"
-              placeholder="eg : 400001"
-              value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 mb-3"
-            />
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase ml-1">
+                  Pincode
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 400001"
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-orange-500 outline-none"
+                />
+              </div>
 
-            <textarea
-              placeholder="Area, nearby location, road"
-              value={fullAddress}
-              onChange={(e) => setFullAddress(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 mb-4"
-              rows="3"
-            />
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase ml-1">
+                  Full Address
+                </label>
+                <textarea
+                  placeholder="Flat/House No, Building, Street, Area"
+                  value={fullAddress}
+                  onChange={(e) => setFullAddress(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-orange-500 outline-none"
+                  rows="3"
+                />
+              </div>
+            </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setOpenModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg"
+                className="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl"
               >
                 Cancel
               </button>
-
               <button
                 onClick={handleAddAddress}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg"
+                className="flex-1 py-3 bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-200"
               >
-                Save Address
+                Save
               </button>
             </div>
           </div>

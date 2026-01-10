@@ -1,3 +1,10 @@
+import {
+  ChevronDown,
+  LogOut,
+  ShoppingCart,
+  UserIcon,
+  Package,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,17 +27,6 @@ export default function HomePage() {
   // 🔍 SEARCH STATE
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-
-  const logoutUser = async () => {
-    try {
-      await api.get("/auth/logout", { withCredentials: true });
-      dispatch(clearUser());
-      toast.success("Logged out successfully");
-      navigate("/login");
-    } catch {
-      toast.error("Logout failed");
-    }
-  };
 
   // 🔍 DEBOUNCED SEARCH API
   useEffect(() => {
@@ -59,6 +55,21 @@ export default function HomePage() {
     navigate(`/buyfood?storeId=${storeId}&category=`);
   };
 
+  // Logout
+  const handleLogout = async () => {
+    try {
+      await api.get("/auth/logout", {
+        withCredentials: true,
+      });
+
+      dispatch(clearUser());
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (err) {
+      toast.error("Logout failed");
+    }
+  };
+
   return (
     <>
       <div id="home-screen">
@@ -75,29 +86,106 @@ export default function HomePage() {
                 className="flex items-center gap-2 cursor-pointer select-none"
                 onClick={() => setOpen(!open)}
               >
-                <i className="fa-solid fa-circle-user"></i>
-                <span>{currentUser.name}</span>
-                <i
-                  className={`fa-solid fa-chevron-down transition-transform duration-200 ${
-                    open ? "rotate-180" : ""
-                  }`}
-                ></i>
+                <UserIcon width={24} height={24} className="text-white" />
+                <span className="text-white font-bold">{currentUser.name}</span>
+                {open ? (
+                  <ChevronDown color="white" className="rotate-180 h-7 w-7" />
+                ) : (
+                  <ChevronDown color="white" className="h-6 w-6" />
+                )}
               </div>
 
               {open && (
-                <div className="absolute top-10 right-0 bg-white text-black shadow-lg rounded-md w-32 border border-gray-200 z-[999] animate-fade">
-                  <a
-                    href="/profile"
-                    className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "35px",
+                    right: 0,
+                    background: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    padding: "8px 0",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                    zIndex: 999,
+                    minWidth: "170px",
+                    fontSize: "14px",
+                    color: "#111827",
+                  }}
+                >
+                  {/* My Orders */}
+                  <div
+                    onClick={() => {
+                      navigate("/myorders");
+                      setOpen(false);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 14px",
+                      cursor: "pointer",
+                      borderRadius: "6px",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#f3f4f6")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
                   >
-                    Profile
-                  </a>
-                  <button
-                    onClick={logoutUser}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-red-600"
+                    <Package size={16} /> My Orders
+                  </div>
+
+                  {/* My Cart */}
+                  <div
+                    onClick={() => {
+                      navigate("/checkout");
+                      setOpen(false);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 14px",
+                      cursor: "pointer",
+                      borderRadius: "6px",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#f3f4f6")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
                   >
-                    Logout
-                  </button>
+                    <ShoppingCart size={16} /> My Cart
+                  </div>
+
+                  <hr style={{ margin: "6px 0", borderColor: "#e5e7eb" }} />
+
+                  {/* Logout */}
+                  <div
+                    onClick={() => {
+                      handleLogout();
+                      setOpen(false);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 14px",
+                      cursor: "pointer",
+                      borderRadius: "6px",
+                      color: "#dc2626",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#fee2e2")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
+                  >
+                    <LogOut size={16} /> Logout
+                  </div>
                 </div>
               )}
             </div>

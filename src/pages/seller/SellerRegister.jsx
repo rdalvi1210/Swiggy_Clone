@@ -1,9 +1,8 @@
-import axios from "axios";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate, Link } from "react-router-dom";
-import "./SellerRegister.css";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../utils/axiosInstance";
+import "./SellerRegister.css";
 
 export default function SellerRegister() {
   const navigate = useNavigate();
@@ -31,14 +30,12 @@ export default function SellerRegister() {
     }
 
     try {
-      const res = await api.post(
-        "/auth/seller-register",
-        formData,
-        { withCredentials: true }
-      );
+      const res = await api.post("/auth/seller-register", formData, {
+        withCredentials: true,
+      });
 
       toast.success(res.data.message || "Registration successful");
-      navigate("/seller/login");
+      navigate("/login");
     } catch (err) {
       toast.error(err.response?.data?.message || "Something went wrong");
     }
